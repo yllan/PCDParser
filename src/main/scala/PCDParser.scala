@@ -37,7 +37,8 @@ case class InchLiteral(inch: Double) extends MeasurementLiteral {
 sealed trait PCDCommand
 case class BeginPDF(width: MeasurementLiteral, height: MeasurementLiteral) extends PCDCommand
 case class EndPDF(outputPath: String) extends PCDCommand
-case class EndJPEG(width: Int, height: Int, compression: Double, outputPath: String) extends PCDCommand
+case class EndJPEGScale(dpi: Double, compression: Double, outputPath: String) extends PCDCommand
+case class EndJPEGSize(width: Int, height: Int, compression: Double, outputPath: String) extends PCDCommand
 case class EndPNGScale(dpi: Double, scale: Double, outputPath: String) extends PCDCommand
 case class EndPNGSize(width: Int, height: Int, outputPath: String) extends PCDCommand
 
@@ -55,10 +56,10 @@ case class FillColor(color: Color, frame: Rect) extends PCDCommand
 
 case class DrawText(text: String, frame: Rect) extends PCDCommand
 
-
-object LiteralParser extends RegexParsers {
+object PCDParser extends RegexParsers {
   override def skipWhitespace = false
 
+  def naturalNumber: Parser[Int] = """\d+""".r ^^ { _.toInt }
   def number: Parser[Double] = """-?\d+(\.\d*)?""".r ^^ { _.toDouble }
   def ptMeasurementLiteral: Parser[PointLiteral] = number ^^ { PointLiteral(_) }
   def cmMeasurementLiteral: Parser[CentimeterLiteral] = number ~ "cm" ^^ { case n ~ "cm" => CentimeterLiteral(n) }
@@ -87,10 +88,23 @@ object LiteralParser extends RegexParsers {
 
   def stringLiteral: Parser[StringLiteral] = quotedStringLiteral | """[^\s]+""".r ^^ { StringLiteral(_) }
 
-}
+  def sp: Parser[String] = """\s+""".r
 
-object PCDParser extends RegexParsers {
+  def beginPDF: Parser[BeginPDF] = "beginpdf" ~ sp ~ measurementLiteral ~ sp ~ measurementLiteral ^^ {
+    case ("beginpdf" ~ _ ~ width ~ _ ~ height) => BeginPDF(width, height)
+  }
   
-  
+  def endPDF: Parser[EndPDF] = "endpdf" ~ sp ~ stringLiteral ^^ {
+    case ("endpdf" ~ _ ~ path) => EndPDF(path.string)
+  }
 
+  def endJPEGWithSize: Parser[EndJPEGSize] = "endjpg" ~ sp ~ naturalNumber ~ "px" ~ sp ~ naturalNumber ~ "px" ~ sp ~ number ~ sp ~ stringLiteral ^^ {
+    case ("endjpg" ~ _ ~ width ~ _ ~ _ ~ height ~ _ ~ _ ~ compression ~ _ ~ path) =>
+      EndJPEGSize(width, height, compression, path.string)
+  }
+
+  def endJPEGWithScale: Parser[EndJPEGScale] = "endjpg" ~ sp ~ number ~ sp ~ number ~ sp ~ stringLiteral ^^ {
+    case ("endjpg" ~ _ ~ dpi ~ _ ~ compression ~ _ ~ path) =>
+      EndJPEGScale(dpi, compression, path.string)
+  }
 }
