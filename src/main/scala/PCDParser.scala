@@ -19,7 +19,7 @@ case class RGBColor(r: Int, g: Int, b: Int) extends Color // Each component from
 case class CMYKAColor(c: Double, m: Double, y: Double, k: Double, a: Double) extends Color // Each component from 0.0 - 1.0
 case class NamedColor(colorName: String) extends Color
 
-case class StringLiteral(val string: String)
+case class StringLiteral(string: String)
 
 sealed abstract trait MeasurementLiteral {
   def points: Double
@@ -31,7 +31,7 @@ case class CentimeterLiteral(cm: Double) extends MeasurementLiteral {
   def points = cm * 72.0 / 2.54
 }
 case class InchLiteral(inch: Double) extends MeasurementLiteral {
-  def points = inch * 72
+  def points = inch * 72.0
 }
 
 sealed trait PCDCommand
