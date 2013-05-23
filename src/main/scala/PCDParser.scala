@@ -107,4 +107,15 @@ object PCDParser extends RegexParsers {
     case ("endjpg" ~ _ ~ dpi ~ _ ~ compression ~ _ ~ path) =>
       EndJPEGScale(dpi, compression, path.string)
   }
+
+  def endPNGWithSize: Parser[EndPNGSize] = "endpng" ~ sp ~ naturalNumber ~ "px" ~ sp ~ naturalNumber ~ "px" ~ sp ~ stringLiteral ^^ {
+    case ("endpng" ~ _ ~ width ~ "px" ~ _ ~ height ~ "px" ~ _ ~ path) =>
+      EndPNGSize(width, height, path.string)
+  }
+
+  def endPNGWithScale: Parser[EndPNGScale] = "endpng" ~ sp ~ number ~ sp ~ number ~ sp ~ stringLiteral ^^ {
+    case ("endpng" ~ _ ~ dpi ~ _ ~ scale ~ _ ~ path) =>
+      EndPNGScale(dpi, scale, path.string)
+  }
+
 }

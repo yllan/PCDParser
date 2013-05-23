@@ -90,4 +90,17 @@ class PCDParserParserSpecs extends Specification with ParserMatchers {
       PCDParser.endJPEGWithScale must succeedOn("endjpg 72 0.5 file:///tmp/output.jpg").withResult(EndJPEGScale(72, 0.5, "file:///tmp/output.jpg"))
     }
   }
+
+  "endPNGWithSize" should {
+    "recognize width height compression path" in {
+      PCDParser.endPNGWithSize must succeedOn("endpng 500px 300px file:///tmp/output.png").withResult(EndPNGSize(500, 300, "file:///tmp/output.png"))
+    }
+  }
+
+  "endPNGWithScale" should {
+    "recognize dpi scale path" in {
+      PCDParser.endPNGWithScale must succeedOn("endpng 72 2.0 file:///tmp/output.png").withResult(EndPNGScale(72, 2.0, "file:///tmp/output.png"))
+    }
+  }
+
 }
