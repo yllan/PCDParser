@@ -56,6 +56,8 @@ case class FillColor(color: Color, frame: Rect) extends PCDCommand
 
 case class DrawText(text: String, frame: Rect) extends PCDCommand
 
+case class UnknownCommand(command: StringLiteral, args: Seq[StringLiteral]) extends PCDCommand
+
 object PCDParser extends RegexParsers {
   override def skipWhitespace = false
 
@@ -86,7 +88,7 @@ object PCDParser extends RegexParsers {
       }).mkString)
   }
 
-  def stringLiteral: Parser[StringLiteral] = quotedStringLiteral | """[^\s]+""".r ^^ { StringLiteral(_) }
+  def stringLiteral: Parser[StringLiteral] = quotedStringLiteral | """[^\s#]+""".r ^^ { StringLiteral(_) }
 
   def sp: Parser[String] = """\s+""".r
 
@@ -124,5 +126,54 @@ object PCDParser extends RegexParsers {
 
   def simpleImage: Parser[SimpleImage] = "simpleimage" ~ sp ~ stringLiteral ~ sp ~ rect ^^ {
     case ("simpleimage" ~ _ ~ url ~ _ ~ rect) => SimpleImage(url.string, rect, None)
+  }
+
+  def simpleImageCompress: Parser[SimpleImage] = "simpleimage_compress" ~ sp ~ stringLiteral ~ sp ~ number ~ sp ~ rect ^^ {
+    case ("simpleimage_compress" ~ _ ~ url ~ _ ~ compression ~ _ ~ rect) =>
+      SimpleImage(url.string, rect, Some(compression))
+  }
+
+  def scalarCropMeasurement: Parser[ScalarCropMeasurement] = measurementLiteral ^^ {
+    case m: MeasurementLiteral => ScalarCropMeasurement(m.points)
+  }
+
+  def scalarCropPixel: Parser[ScalarCropMeasurement] = naturalNumber ~ "px" ^^ {
+    case (d ~ "px") => ScalarCropMeasurement(d)
+  }
+
+  def scalarCrop: Parser[ScalarCropMeasurement] = scalarCropPixel | scalarCropMeasurement 
+
+  def ratioCrop: Parser[RatioCropMeasurement] = """[xX\*×]""".r ~ number ^^ {
+    case (_ ~ ratio) => RatioCropMeasurement(ratio)
+  }
+
+  def cropMeasurement: Parser[CropMeasurementLiteral] = scalarCrop | ratioCrop
+
+  def cropRect: Parser[CropRect] = cropMeasurement ~ sp ~ cropMeasurement ~ sp ~ cropMeasurement ~ sp ~ cropMeasurement ^^ {
+    case (x ~ _ ~ y ~ _ ~ w ~ _ ~ h) => CropRect(x, y, w, h)
+  }
+
+  def cropImage: Parser[CropImage] = "image" ~ sp ~ stringLiteral ~ sp ~ cropRect ~ sp ~ rect ^^ {
+    case ("image" ~ _ ~ url ~ _ ~ cropRect ~ _ ~ frame) =>
+      CropImage(url.string, cropRect, frame, None)
+  }
+
+  def cropImageCompress: Parser[CropImage] = "image_compress" ~ sp ~ stringLiteral ~ sp ~ number ~ sp ~ cropRect ~ sp ~ rect ^^ {
+    case ("image_compress" ~ _ ~ url ~ _ ~ compression ~ _ ~ cropRect ~ _ ~ frame) => 
+      CropImage(url.string, cropRect, frame, Some(compression))
+  }
+
+  def unknownCommand: Parser[UnknownCommand] = stringLiteral ~ rep(sp ~ stringLiteral) ^^ {
+    case (cmd ~ args) => 
+      UnknownCommand(cmd, args.map{ case (_ ~ arg) => arg })
+  }
+
+  def command: Parser[PCDCommand] = beginPDF | endPDF | endJPEGWithSize | endJPEGWithScale | endPNGWithSize | endPNGWithScale | 
+                                    simpleImageCompress | simpleImage | cropImageCompress | cropImage | unknownCommand
+
+  def line: Parser[Option[PCDCommand]] = sp.? ~ command.? ~ sp.? ~ "#.*".? ^^ {
+    case (_ ~ cmd ~ _ ~ comment) => {
+      cmd
+    }
   }
 }

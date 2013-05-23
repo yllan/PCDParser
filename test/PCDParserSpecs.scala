@@ -103,6 +103,114 @@ class PCDParserParserSpecs extends Specification with ParserMatchers {
                     compressionRatio = None)
       )
     }
+
+    "recognize simpleimage_compress url compression rect" in {
+      PCDParser.simpleImageCompress must succeedOn("simpleimage_compress http://localhost/test.png 0.99 0.2cm 0.2cm 10cm 10cm").withResult(
+        SimpleImage(url = "http://localhost/test.png", 
+                    frame = Rect(CentimeterLiteral(0.2), CentimeterLiteral(0.2), CentimeterLiteral(10), CentimeterLiteral(10)),
+                    compressionRatio = Some(0.99))
+      )
+    }
+
+    "recognize image url cropRect rect with scalar cropRect" in {
+      PCDParser.cropImage must succeedOn("image http://localhost/test.png 0px 10px 200px 200px 0.2cm 0.2cm 10cm 10cm").withResult(
+        CropImage(url = "http://localhost/test.png", 
+                  cropRect = CropRect(ScalarCropMeasurement(0), ScalarCropMeasurement(10), ScalarCropMeasurement(200), ScalarCropMeasurement(200)),
+                  frame = Rect(CentimeterLiteral(0.2), CentimeterLiteral(0.2), CentimeterLiteral(10), CentimeterLiteral(10)),
+                  compressionRatio = None)
+      )
+    }
+
+    "recognize image url cropRect rect with ratio cropRect" in {
+      PCDParser.cropImage must succeedOn("image http://localhost/test.png *0 *0.5 x0.23 ×0.55 0.2cm 0.2cm 10cm 10cm").withResult(
+        CropImage(url = "http://localhost/test.png", 
+                  cropRect = CropRect(RatioCropMeasurement(0), RatioCropMeasurement(0.5), RatioCropMeasurement(0.23), RatioCropMeasurement(0.55)),
+                  frame = Rect(CentimeterLiteral(0.2), CentimeterLiteral(0.2), CentimeterLiteral(10), CentimeterLiteral(10)),
+                  compressionRatio = None)
+      )
+    }
+
+    "recognize image_compress url compression cropRect rect with scalar cropRect" in {
+      PCDParser.cropImageCompress must succeedOn("image_compress http://localhost/test.png 0.97 0px 10px 200px 200px 0.2cm 0.2cm 10cm 10cm").withResult(
+        CropImage(url = "http://localhost/test.png", 
+                  cropRect = CropRect(ScalarCropMeasurement(0), ScalarCropMeasurement(10), ScalarCropMeasurement(200), ScalarCropMeasurement(200)),
+                  frame = Rect(CentimeterLiteral(0.2), CentimeterLiteral(0.2), CentimeterLiteral(10), CentimeterLiteral(10)),
+                  compressionRatio = Some(0.97))
+      )
+    }
+
+    "recognize image_compress url compression cropRect rect with ratio cropRect" in {
+      PCDParser.cropImageCompress must succeedOn("image_compress http://localhost/test.png 0.75 *0 *0.5 x0.23 ×0.55 0.2cm 0.2cm 10cm 10cm").withResult(
+        CropImage(url = "http://localhost/test.png", 
+                  cropRect = CropRect(RatioCropMeasurement(0), RatioCropMeasurement(0.5), RatioCropMeasurement(0.23), RatioCropMeasurement(0.55)),
+                  frame = Rect(CentimeterLiteral(0.2), CentimeterLiteral(0.2), CentimeterLiteral(10), CentimeterLiteral(10)),
+                  compressionRatio = Some(0.75))
+      )
+    }
+  }
+
+  "PCDCommand" should {
+    "recognize simpleimage" in {
+      PCDParser.command must succeedOn("simpleimage http://localhost/test.png 0.2cm 0.2cm 10cm 10cm").withResult(
+        SimpleImage(url = "http://localhost/test.png", 
+                    frame = Rect(CentimeterLiteral(0.2), CentimeterLiteral(0.2), CentimeterLiteral(10), CentimeterLiteral(10)),
+                    compressionRatio = None)
+      )
+    }
+
+    "recognize simpleimage_compress" in {
+      PCDParser.command must succeedOn("simpleimage_compress http://localhost/test.png 0.99 0.2cm 0.2cm 10cm 10cm").withResult(
+        SimpleImage(url = "http://localhost/test.png", 
+                    frame = Rect(CentimeterLiteral(0.2), CentimeterLiteral(0.2), CentimeterLiteral(10), CentimeterLiteral(10)),
+                    compressionRatio = Some(0.99))
+      )
+    }
+
+    "recognize image" in {
+      PCDParser.command must succeedOn("image http://localhost/test.png 0px 10px 200px 200px 0.2cm 0.2cm 10cm 10cm").withResult(
+        CropImage(url = "http://localhost/test.png", 
+                  cropRect = CropRect(ScalarCropMeasurement(0), ScalarCropMeasurement(10), ScalarCropMeasurement(200), ScalarCropMeasurement(200)),
+                  frame = Rect(CentimeterLiteral(0.2), CentimeterLiteral(0.2), CentimeterLiteral(10), CentimeterLiteral(10)),
+                  compressionRatio = None)
+      )
+
+      PCDParser.command must succeedOn("image http://localhost/test.png *0 *0.5 x0.23 ×0.55 0.2cm 0.2cm 10cm 10cm").withResult(
+        CropImage(url = "http://localhost/test.png", 
+                  cropRect = CropRect(RatioCropMeasurement(0), RatioCropMeasurement(0.5), RatioCropMeasurement(0.23), RatioCropMeasurement(0.55)),
+                  frame = Rect(CentimeterLiteral(0.2), CentimeterLiteral(0.2), CentimeterLiteral(10), CentimeterLiteral(10)),
+                  compressionRatio = None)
+      )
+    }
+
+    "recognize image_compress" in {
+      PCDParser.command must succeedOn("image_compress http://localhost/test.png 0.97 0px 10px 200px 200px 0.2cm 0.2cm 10cm 10cm").withResult(
+        CropImage(url = "http://localhost/test.png", 
+                  cropRect = CropRect(ScalarCropMeasurement(0), ScalarCropMeasurement(10), ScalarCropMeasurement(200), ScalarCropMeasurement(200)),
+                  frame = Rect(CentimeterLiteral(0.2), CentimeterLiteral(0.2), CentimeterLiteral(10), CentimeterLiteral(10)),
+                  compressionRatio = Some(0.97))
+      )
+      PCDParser.command must succeedOn("image_compress http://localhost/test.png 0.75 *0 *0.5 x0.23 ×0.55 0.2cm 0.2cm 10cm 10cm").withResult(
+        CropImage(url = "http://localhost/test.png", 
+                  cropRect = CropRect(RatioCropMeasurement(0), RatioCropMeasurement(0.5), RatioCropMeasurement(0.23), RatioCropMeasurement(0.55)),
+                  frame = Rect(CentimeterLiteral(0.2), CentimeterLiteral(0.2), CentimeterLiteral(10), CentimeterLiteral(10)),
+                  compressionRatio = Some(0.75))
+      )
+    }
+
+    "recognize endpdf/endjpg/endpng" in {
+      PCDParser.command must succeedOn("endpdf file:///tmp/output.pdf").withResult(EndPDF("file:///tmp/output.pdf"))
+      PCDParser.command must succeedOn("endpdf \"file:///tmp/out put.pdf\"").withResult(EndPDF("file:///tmp/out put.pdf"))
+      PCDParser.command must succeedOn("endjpg 500px 300px 0.5 file:///tmp/output.jpg").withResult(EndJPEGSize(500, 300, 0.5, "file:///tmp/output.jpg"))
+      PCDParser.command must succeedOn("endjpg 500px 300px 0.5 \"file:///tmp/out put.jpg\"").withResult(EndJPEGSize(500, 300, 0.5, "file:///tmp/out put.jpg"))
+      PCDParser.command must succeedOn("endjpg 72 0.5 file:///tmp/output.jpg").withResult(EndJPEGScale(72, 0.5, "file:///tmp/output.jpg"))
+      PCDParser.command must succeedOn("endpng 500px 300px file:///tmp/output.png").withResult(EndPNGSize(500, 300, "file:///tmp/output.png"))
+      PCDParser.command must succeedOn("endpng 72 2.0 file:///tmp/output.png").withResult(EndPNGScale(72, 2.0, "file:///tmp/output.png"))
+    }
+
+    "recognize beginpdf" in {
+      PCDParser.command must succeedOn("beginpdf 10.235 23.5").withResult(BeginPDF(PointLiteral(10.235), PointLiteral(23.5)))
+      PCDParser.command must succeedOn("beginpdf 30cm 40cm").withResult(BeginPDF(CentimeterLiteral(30), CentimeterLiteral(40)))
+    }
   }
 
 }
