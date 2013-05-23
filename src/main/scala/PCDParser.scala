@@ -1,4 +1,4 @@
-package models
+package cc.hypo.pcd
 import scala.util.parsing.combinator.RegexParsers
 
 sealed trait CropMeasurementLiteral
@@ -55,24 +55,42 @@ case class FillColor(color: Color, frame: Rect) extends PCDCommand
 
 case class DrawText(text: String, frame: Rect) extends PCDCommand
 
-object PCDParser extends RegexParsers {
+
+object LiteralParser extends RegexParsers {
+  override def skipWhitespace = false
+
   def number: Parser[Double] = """-?\d+(\.\d*)?""".r ^^ { _.toDouble }
   def ptMeasurementLiteral: Parser[PointLiteral] = number ^^ { PointLiteral(_) }
   def cmMeasurementLiteral: Parser[CentimeterLiteral] = number ~ "cm" ^^ { case n ~ "cm" => CentimeterLiteral(n) }
   def inMeasurementLiteral: Parser[InchLiteral] = number ~ "in" ^^ { case n ~ "in" => InchLiteral(n) }
+
+
   def measurementLiteral: Parser[MeasurementLiteral] = cmMeasurementLiteral | inMeasurementLiteral | ptMeasurementLiteral
 
-  // "Double Quote: \", Newline: \n, Tab: \t, Return: \r, Backslash: \\. "
-  def quotedStringLiteral: Parser[StringLiteral] = "\"" ~ rep("\\\"" | """\n""" | """\r""" | """\t""" | """\\""" | """[^\\]*""".r) ~ "\"" ^^ {
-    case "\"" ~ chars ~ "\"" => StringLiteral(chars.map({
-      case "\\\"" => "\""
-      case "\\n" => "\n"
-      case "\\t" => "\t"
-      case "\\r" => "\r"
-      case "\\\\" => "\\"
-      case c => c
-    }).mkString)
+  /** Double quotes (`"`) enclosing a sequence of:
+   *
+   *  - Any character except double quotes, control characters or backslash (`\`)
+   *  - A backslash followed by another backslash, a double quote, or one
+   *    of the letters 'n', 't' or 'r'
+   */
+  def quotedStringLiteral: Parser[StringLiteral] = "\"" ~ rep("""[^"\p{Cntrl}\\]+""".r | """\\["ntr\\]""".r) ~ "\"" ^^ {
+    case "\"" ~ chars ~ "\"" => 
+      StringLiteral(chars.map({
+        case """\\""" => """\"""
+        case """\n""" => "\n"
+        case """\t""" => "\t"
+        case """\r""" => "\r"
+        case "\\\"" => "\""
+        case c => c
+      }).mkString)
   }
+
   def stringLiteral: Parser[StringLiteral] = quotedStringLiteral | """[^\s]+""".r ^^ { StringLiteral(_) }
+
+}
+
+object PCDParser extends RegexParsers {
+  
+  
 
 }
