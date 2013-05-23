@@ -71,35 +71,37 @@ class PCDParserParserSpecs extends Specification with ParserMatchers {
     }
   }
 
-  "endPDF" should {
-    "recognize path" in {
+  "end[PDF/JPEG/PNG]" should {
+    "recognize path for endpdf" in {
       PCDParser.endPDF must succeedOn("endpdf file:///tmp/output.pdf").withResult(EndPDF("file:///tmp/output.pdf"))
       PCDParser.endPDF must succeedOn("endpdf \"file:///tmp/out put.pdf\"").withResult(EndPDF("file:///tmp/out put.pdf"))
     }
-  }
 
-  "endJPEGWithSize" should {
-    "recognize width height compression path" in {
+    "recognize width height compression path for endjpg" in {
       PCDParser.endJPEGWithSize must succeedOn("endjpg 500px 300px 0.5 file:///tmp/output.jpg").withResult(EndJPEGSize(500, 300, 0.5, "file:///tmp/output.jpg"))
       PCDParser.endJPEGWithSize must succeedOn("endjpg 500px 300px 0.5 \"file:///tmp/out put.jpg\"").withResult(EndJPEGSize(500, 300, 0.5, "file:///tmp/out put.jpg"))
     }
-  }
 
-  "endJPEGWithScale" should {
-    "recognize dpi compression path" in {
+    "recognize dpi compression path for endjpg" in {
       PCDParser.endJPEGWithScale must succeedOn("endjpg 72 0.5 file:///tmp/output.jpg").withResult(EndJPEGScale(72, 0.5, "file:///tmp/output.jpg"))
     }
-  }
 
-  "endPNGWithSize" should {
-    "recognize width height compression path" in {
+    "recognize width height compression path for endpng" in {
       PCDParser.endPNGWithSize must succeedOn("endpng 500px 300px file:///tmp/output.png").withResult(EndPNGSize(500, 300, "file:///tmp/output.png"))
+    }
+
+    "recognize dpi scale path for endpng" in {
+      PCDParser.endPNGWithScale must succeedOn("endpng 72 2.0 file:///tmp/output.png").withResult(EndPNGScale(72, 2.0, "file:///tmp/output.png"))
     }
   }
 
-  "endPNGWithScale" should {
-    "recognize dpi scale path" in {
-      PCDParser.endPNGWithScale must succeedOn("endpng 72 2.0 file:///tmp/output.png").withResult(EndPNGScale(72, 2.0, "file:///tmp/output.png"))
+  "Image" should {
+    "recognize simpleimage url rect" in {
+      PCDParser.simpleImage must succeedOn("simpleimage http://localhost/test.png 0.2cm 0.2cm 10cm 10cm").withResult(
+        SimpleImage(url = "http://localhost/test.png", 
+                    frame = Rect(CentimeterLiteral(0.2), CentimeterLiteral(0.2), CentimeterLiteral(10), CentimeterLiteral(10)),
+                    compressionRatio = None)
+      )
     }
   }
 

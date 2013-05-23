@@ -118,4 +118,11 @@ object PCDParser extends RegexParsers {
       EndPNGScale(dpi, scale, path.string)
   }
 
+  def rect: Parser[Rect] = measurementLiteral ~ sp ~ measurementLiteral ~ sp ~ measurementLiteral ~ sp ~ measurementLiteral ^^ {
+    case (x ~ _ ~ y ~ _ ~ w ~ _ ~ h) => Rect(x, y, w, h)
+  }
+
+  def simpleImage: Parser[SimpleImage] = "simpleimage" ~ sp ~ stringLiteral ~ sp ~ rect ^^ {
+    case ("simpleimage" ~ _ ~ url ~ _ ~ rect) => SimpleImage(url.string, rect, None)
+  }
 }
