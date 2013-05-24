@@ -42,19 +42,6 @@ case class EndJPEGSize(width: Int, height: Int, compression: Double, outputPath:
 case class EndPNGScale(dpi: Double, scale: Double, outputPath: String) extends PCDCommand
 case class EndPNGSize(width: Int, height: Int, outputPath: String) extends PCDCommand
 
-/* Set option  */
-sealed trait PCDOptionCommand extends PCDCommand
-case class SetRadius(radius: MeasurementLiteral) extends PCDOptionCommand
-case class SetMaxDPI(maxDPI: Double) extends PCDOptionCommand
-case class SetContentRotation(rotation: Rotation) extends PCDOptionCommand
-case class SetGeneralOption(key: String, value: String) extends PCDOptionCommand
-
-case class SimpleImage(url: String, frame: Rect, compressionRatio: Option[Double]) extends PCDCommand
-case class CropImage(url: String, cropRect: CropRect, frame: Rect, compressionRatio: Option[Double]) extends PCDCommand
-
-case class FillColor(color: Color, frame: Rect) extends PCDCommand
-
-case class DrawText(text: String, frame: Rect) extends PCDCommand
 
 case class UnknownCommand(command: StringLiteral, args: Seq[StringLiteral]) extends PCDCommand
 
