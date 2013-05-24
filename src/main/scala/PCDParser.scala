@@ -1,11 +1,6 @@
 package cc.hypo.pcd
 import scala.util.parsing.combinator.RegexParsers
 
-object Implicits {
-  implicit def StringLiteralToString(sl: StringLiteral): String = sl.stringify
-  implicit def StringToStringLiteral(s: String): StringLiteral = StringLiteral(s)
-}
-
 sealed trait PCDStringifiable {
   def stringify: String
 }
@@ -86,14 +81,14 @@ case class EndPNGSize(width: Int, height: Int, outputPath: StringLiteral) extend
 
 case class SimpleImage(url: StringLiteral, frame: Rect, compressionRatio: Option[Double]) extends PCDCommand {
   def stringify = compressionRatio match {
-    case Some(compress) => "simpleimage_compress ${url.stringify} $compress ${frame.stringify}"
-    case None => "simpleimage ${url.stringify} ${frame.stringify}"
+    case Some(compress) => s"simpleimage_compress ${url.stringify} $compress ${frame.stringify}"
+    case None => s"simpleimage ${url.stringify} ${frame.stringify}"
   }
 }
 case class CropImage(url: StringLiteral, cropRect: CropRect, frame: Rect, compressionRatio: Option[Double]) extends PCDCommand {
   def stringify = compressionRatio match {
-    case Some(compress) => "image_compress ${url.stringify} $compress ${cropRect.stringify} ${frame.stringify}"
-    case None => "image ${url.stringify} ${cropRect.stringify} ${frame.stringify}"
+    case Some(compress) => s"image_compress ${url.stringify} $compress ${cropRect.stringify} ${frame.stringify}"
+    case None => s"image ${url.stringify} ${cropRect.stringify} ${frame.stringify}"
   }
 }
 
