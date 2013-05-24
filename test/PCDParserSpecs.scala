@@ -256,4 +256,38 @@ endpdf  file:///tmp/output.pdf
     }
   }
 
+  "Stringify" should {
+    "Parse back to equal structure if it contains no cm/inch literal" in {
+      val commands = Seq(
+        BeginPDF(PointLiteral(30), PointLiteral(40)),
+        SimpleImage(StringLiteral("http://www.apple.com/apple.png"), Rect(PointLiteral(0.5), PointLiteral(0.5), PointLiteral(3), PointLiteral(3)), None),
+        SimpleImage(StringLiteral(""), Rect(PointLiteral(0.5), PointLiteral(0.5), PointLiteral(3), PointLiteral(3)), None),
+        UnknownCommand(StringLiteral("set"), Seq(StringLiteral("Color"), StringLiteral("CMYK:0.8,0.7,0.5,0.0"))),
+        UnknownCommand(StringLiteral("text"), Seq(StringLiteral("5"), StringLiteral("5"), StringLiteral("100"), StringLiteral("200"), StringLiteral("""cool\"fun" sentence"""))),
+        EndPDF(StringLiteral("file:///tmp/output.pdf")),
+        EndPNGScale(72, 2.0, StringLiteral("file:///tmp/output.png")),
+        EndPNGSize(500, 300, StringLiteral("file:///tmp/output.png")),
+        EndJPEGSize(500, 300, 0.5, StringLiteral("file:///tmp/output.jpg")),
+        EndJPEGScale(72, 0.5, StringLiteral("file:///tmp/output.jpg")),
+        SimpleImage(url = StringLiteral("http://localhost/test.png"), 
+                    frame = Rect(PointLiteral(0.2), PointLiteral(0.2), PointLiteral(10), PointLiteral(10)),
+                    compressionRatio = Some(0.99)),
+        SimpleImage(url = StringLiteral("http://localhost/test.png"), 
+                    frame = Rect(PointLiteral(0.2), PointLiteral(0.2), PointLiteral(10), PointLiteral(10)),
+                    compressionRatio = None),
+        CropImage(url = StringLiteral("http://localhost/test.png"), 
+                  cropRect = CropRect(ScalarCropMeasurement(0), ScalarCropMeasurement(10), ScalarCropMeasurement(200), ScalarCropMeasurement(200)),
+                  frame = Rect(PointLiteral(0.2), PointLiteral(0.2), PointLiteral(10), PointLiteral(10)),
+                  compressionRatio = Some(0.97)),
+        CropImage(url = StringLiteral("http://localhost/test.png"), 
+                  cropRect = CropRect(RatioCropMeasurement(0), RatioCropMeasurement(0.5), RatioCropMeasurement(0.23), RatioCropMeasurement(0.55)),
+                  frame = Rect(PointLiteral(0.2), PointLiteral(0.2), PointLiteral(10), PointLiteral(10)),
+                  compressionRatio = Some(0.75))
+
+      )
+      PCDParser.document must succeedOn(commands.map(_.stringify).mkString("\n")).withResult(commands)
+    }
+
+  }
+
 }
