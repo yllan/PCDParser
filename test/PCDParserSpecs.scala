@@ -211,6 +211,49 @@ class PCDParserParserSpecs extends Specification with ParserMatchers {
       PCDParser.command must succeedOn("beginpdf 10.235 23.5").withResult(BeginPDF(PointLiteral(10.235), PointLiteral(23.5)))
       PCDParser.command must succeedOn("beginpdf 30cm 40cm").withResult(BeginPDF(CentimeterLiteral(30), CentimeterLiteral(40)))
     }
+
+    "recognize any command" in {
+      PCDParser.command must succeedOn("set Color 0xCAFEBB").withResult(UnknownCommand(StringLiteral("set"), Seq(StringLiteral("Color"), StringLiteral("0xCAFEBB"))))
+
+      PCDParser.command must succeedOn("text 5cm 5cm 10cm 10cm \"Hello, world\"").withResult(
+        UnknownCommand(StringLiteral("text"), Seq(StringLiteral("5cm"), StringLiteral("5cm"), StringLiteral("10cm"), StringLiteral("10cm"), StringLiteral("Hello, world")))
+      )
+    }
+  }
+
+  "PCDDocument" should {
+    "parse line" in {
+      PCDParser.line must succeedOn("").withResult(None)
+      PCDParser.line must succeedOn("beginpdf 10 10 # with comment").withResult(Some(
+        BeginPDF(PointLiteral(10), PointLiteral(10))
+      ))
+      PCDParser.line must succeedOn(" beginpdf  10 10 # has indent").withResult(Some(
+        BeginPDF(PointLiteral(10), PointLiteral(10))
+      ))
+    }
+
+    "parse a full pcd file" in {
+      val pcd = """
+
+      # This is a pcd file
+beginpdf 30cm 40cm # size
+
+  simpleimage http://www.apple.com/apple.png 0.5cm 0.5cm 3cm 3cm""" +
+"\n\t" + """set Color CMYK:0.8,0.7,0.5,0.0
+  text 5 5 100 200 "cool\\\"fun\" sentence"
+
+endpdf  file:///tmp/output.pdf
+      """
+
+      PCDParser.document must succeedOn(pcd).withResult(Seq(
+        BeginPDF(CentimeterLiteral(30), CentimeterLiteral(40)),
+        SimpleImage("http://www.apple.com/apple.png", Rect(CentimeterLiteral(0.5), CentimeterLiteral(0.5), CentimeterLiteral(3), CentimeterLiteral(3)), None),
+        UnknownCommand(StringLiteral("set"), Seq(StringLiteral("Color"), StringLiteral("CMYK:0.8,0.7,0.5,0.0"))),
+        UnknownCommand(StringLiteral("text"), Seq(StringLiteral("5"), StringLiteral("5"), StringLiteral("100"), StringLiteral("200"), StringLiteral("""cool\"fun" sentence"""))),
+        EndPDF("file:///tmp/output.pdf")
+      ))
+
+    }
   }
 
 }

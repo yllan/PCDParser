@@ -90,7 +90,7 @@ object PCDParser extends RegexParsers {
 
   def stringLiteral: Parser[StringLiteral] = quotedStringLiteral | """[^\s#]+""".r ^^ { StringLiteral(_) }
 
-  def sp: Parser[String] = """\s+""".r
+  def sp: Parser[String] = """[ \t]+""".r
 
   def beginPDF: Parser[BeginPDF] = "beginpdf" ~ sp ~ measurementLiteral ~ sp ~ measurementLiteral ^^ {
     case ("beginpdf" ~ _ ~ width ~ _ ~ height) => BeginPDF(width, height)
@@ -171,9 +171,15 @@ object PCDParser extends RegexParsers {
   def command: Parser[PCDCommand] = beginPDF | endPDF | endJPEGWithSize | endJPEGWithScale | endPNGWithSize | endPNGWithScale | 
                                     simpleImageCompress | simpleImage | cropImageCompress | cropImage | unknownCommand
 
-  def line: Parser[Option[PCDCommand]] = sp.? ~ command.? ~ sp.? ~ "#.*".? ^^ {
+  def line: Parser[Option[PCDCommand]] = sp.? ~ command.? ~ sp.? ~ "#.*".r.? ^^ {
     case (_ ~ cmd ~ _ ~ comment) => {
       cmd
     }
+  }
+
+  def document: Parser[Seq[PCDCommand]] = repsep(line, "\n") ^^ {
+    case commands => commands.flatMap(cmdOpt =>
+      cmdOpt.map(Seq(_)).getOrElse(Seq())
+    )
   }
 }
